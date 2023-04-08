@@ -1,68 +1,27 @@
-import json
-import requests
-from bs4 import BeautifulSoup
-from requests_html import HTMLSession
+from .database.mongo import get_mongodb_collection
+from .util.helper_functions import get_or_create_new_user, scrape_user_profile
 
 
 
-def scrape_user_profile(username):
-    session = HTMLSession()
-    url = "https://twitter.com/{}".format(username)
-    r = session.get(url)
-    r.html.render(timeout=20)
-    return r
+def main(username):
 
-def parse_user_profile(response):
-    birthday_xpath = '//span[@data-testid="UserBirthdate"]'
-    birthdays = response.html.xpath(birthday_xpath)
-    birthday_texts = [
-        birthday.text for birthday in birthdays
-        ]
-    return birthday_texts[0] if len(birthday_texts) else None 
+    user_id = get_or_create_new_user(username= username)
 
+    birthday = scrape_user_profile(username)
+    birthday_details = {
+        'birth_month': birthday[0],
+        'birth_day': birthday[1]
+    }
 
-def get_user_birthday(username):
-    response = scrape_user_profile(username)
-    birthday_text = parse_user_profile(response)
+    users_collection = get_mongodb_collection("users")
+    users_collection.update_one(
+        {'user_id': user_id},
+        { "$set": birthday_details }
+    )
 
-    try:
-        birthday = birthday_text \
-            .replace('Born ', '') \
-                .split()
-        return birthday
+    return True
+    
 
-    except AttributeError:
-        return None
-
-
-# followers = [{
-#         "id": "2382418134",
-#         "name": "omotosho",
-#         "username": "toshiey_lz"
-#     },
-#     {
-#         "id": "1518491347245801472",
-#         "name": "Tijo",
-#         "username": "temiakanmode"
-#     },
-#     {
-#         "id": "199206734",
-#         "name": "Vally B",
-#         "username": "Vall_erie"
-#     }]
-
-# followers_usernames = [
-#     follower.get('username') 
-#     for follower in followers
-#     ]
-
-# followers_birthdays = [
-#     get_user_birthday(username) 
-#     for username in followers_usernames
-#     ]
-
-# print(followers_birthdays)
-
-username = "folorunso__"
-bday = get_user_birthday(username)
-print(bday)
+if __name__ == "__main__":
+    username = 'folorunso__'
+    main(username= username)

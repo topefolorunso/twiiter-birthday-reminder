@@ -1,13 +1,14 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.support.ui import WebDriverWait
-
 import time
 
+import chromedriver_autoinstaller
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+
+
+
+chromedriver_autoinstaller.install()
 
 class Browser():
     OPTIONS = Options()
@@ -40,4 +41,4 @@ class TwitterBrowser(Browser):
         birthday_texts = [
             birthday.text for birthday in birthdays
             ]
-        return birthday_texts[0] if len(birthday_texts) else None
+        return birthday_texts[0] if birthday_texts else None
